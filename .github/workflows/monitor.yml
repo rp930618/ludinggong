@@ -27,7 +27,7 @@ jobs:
       - name: Restore state
         uses: actions/cache@v4
         with:
-          path: ludinggong-monitor/state.json
+          path: state.json
           key: monitor-state-${{ github.run_id }}
           restore-keys: |
             monitor-state-
@@ -43,11 +43,12 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
           WEIBO_USER_ID: ${{ secrets.WEIBO_USER_ID }}
-          run: |
-  python monitor_v2.py
+        run: |
+          python monitor_v2.py
+
       - name: Upload state on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: monitor-state-error
-          path: ludinggong-monitor/state.json
+          path: state.json
