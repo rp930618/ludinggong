@@ -43,10 +43,8 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
           WEIBO_USER_ID: ${{ secrets.WEIBO_USER_ID }}
-        run: |
-          cd ludinggong-monitor
-          python monitor_v2.py
-
+          run: |
+  python monitor_v2.py
       - name: Upload state on failure
         if: failure()
         uses: actions/upload-artifact@v4
