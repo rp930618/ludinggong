@@ -1,0 +1,55 @@
+name: 超级鹿鼎公调仓监控 v2
+
+on:
+  # 每2小时检查一次（覆盖A股交易时段9:30-15:00 + 盘后发布时段）
+  schedule:
+    - cron: '0 1,3,5,7,9,11,13 * * *'   # UTC 1/3/5/7/9/11/13 = 北京 9/11/13/15/17/19/21
+  # 允许手动触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore state
+        uses: actions/cache@v4
+        with:
+          path: ludinggong-monitor/state.json
+          key: monitor-state-${{ github.run_id }}
+          restore-keys: |
+            monitor-state-
+
+      - name: Run monitor v2 (雪球+微博+企业微信)
+        env:
+          WEWORK_WEBHOOK: ${{ secrets.WEWORK_WEBHOOK }}
+          DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
+          DINGTALK_SECRET: ${{ secrets.DINGTALK_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          WEIBO_USER_ID: ${{ secrets.WEIBO_USER_ID }}
+        run: |
+          cd ludinggong-monitor
+          python monitor_v2.py
+
+      - name: Upload state on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitor-state-error
+          path: ludinggong-monitor/state.json
